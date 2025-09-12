@@ -9,7 +9,6 @@ import android.widget.Button;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -17,28 +16,47 @@ import androidx.core.view.WindowInsetsCompat;
 public class MainActivity extends AppCompatActivity {
 
     Button button;
+    Button buttonCycle;
+    ConstraintLayout bgElement;
+
+    private final int[] cycleColors = new int[]{ Color.RED, Color.BLUE, Color.WHITE, Color.BLUE };
+    private int cycleIndex = 0;
+    private boolean isCycling = false;
+    private final android.os.Handler handler = new android.os.Handler();
+    private final Runnable cycleTask = new Runnable() {
+        @Override
+        public void run() {
+            bgElement.setBackgroundColor(cycleColors[cycleIndex]);
+            cycleIndex = (cycleIndex + 1) % cycleColors.length;
+            if (isCycling) {
+                handler.postDelayed(this, 600);
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.activity_main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        ConstraintLayout bgElement = (ConstraintLayout)findViewById(R.id.activity_main);
+        bgElement = findViewById(R.id.activity_main);
         bgElement.setBackgroundColor(Color.WHITE);
         myButtonListenerMethod();
         setupCycleButton();
     }
 
     public void myButtonListenerMethod(){
-        button= (Button) findViewById(R.id.button);
+        button = findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ConstraintLayout bgElement= (ConstraintLayout)findViewById(R.id.activity_main);
+                ConstraintLayout bgElement= findViewById(R.id.activity_main);
                 int color=((ColorDrawable)bgElement.getBackground()).getColor();
                 if (color == Color.RED) {
                     bgElement.setBackgroundColor(Color.BLUE);
@@ -46,39 +64,26 @@ public class MainActivity extends AppCompatActivity {
                 else {
                     bgElement.setBackgroundColor(Color.RED);
                 }
-
             }
-
         });
     }
-    private Button buttonCycle;
-    private final int[] cycleColors = new int[]{ Color.BLUE, Color.RED, Color.WHITE };
-    private int cycleIndex = 0;
-    private boolean isCycling = false;
-    private final android.os.Handler cycleHandler = new android.os.Handler(android.os.Looper.getMainLooper());
-    private final Runnable cycleTask = new Runnable() {
-        @Override public void run() {
-            ConstraintLayout bg = findViewById(R.id.activity_main);
-            bg.setBackgroundColor(cycleColors[cycleIndex]);
-            cycleIndex = (cycleIndex + 1) % cycleColors.length;
-            if (isCycling) cycleHandler.postDelayed(this, 600); // speed (ms)
-        }
-    };
 
     private void setupCycleButton() {
         buttonCycle = findViewById(R.id.button_cycle);
-        if (buttonCycle == null) return; // safety if XML not added yet
         buttonCycle.setText("Start");
+
         buttonCycle.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
+            @Override
+            public void onClick(View v) {
                 if (!isCycling) {
                     isCycling = true;
                     buttonCycle.setText("End");
-                    cycleHandler.post(cycleTask);
+                    cycleIndex = 0; // reset cycle
+                    handler.post(cycleTask);
                 } else {
                     isCycling = false;
                     buttonCycle.setText("Start");
-                    cycleHandler.removeCallbacks(cycleTask);
+                    handler.removeCallbacks(cycleTask);
                 }
             }
         });
@@ -87,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        cycleHandler.removeCallbacks(cycleTask);
+        handler.removeCallbacks(cycleTask); // cleanup
     }
-
 }
