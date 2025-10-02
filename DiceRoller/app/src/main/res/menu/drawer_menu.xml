@@ -1,0 +1,4 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/menu_bmi"  android:title="BMI Calculator"/>
+    <item android:id="@+id/menu_dice" android:title="Dice Roller"/>
+</menu>
